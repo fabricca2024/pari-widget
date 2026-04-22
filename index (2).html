@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=300, initial-scale=1.0">
+<title>Pari Widget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    width: 300px;
+    height: 600px;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .widget {
+    width: 300px;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e8e8e8;
+    position: relative;
+  }
+  
+  /* HEADER */
+  .widget-header {
+    padding: 14px 16px 12px;
+    background: #ffffff;
+    border-bottom: 2px solid #6ab04c;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo-img {
+    height: 28px;
+    width: auto;
+    display: block;
+  }
+  
+  .header-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #6ab04c;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 3px 7px;
+    background: #eef7e8;
+    border-radius: 3px;
+  }
+  
+  /* ARTICLES LIST */
+  .articles {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .articles::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .article {
+    display: flex;
+    gap: 10px;
+    padding: 11px 12px;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .article:last-child {
+    border-bottom: none;
+  }
+  
+  .article:hover {
+    background: #fafaf8;
+  }
+  
+  .article-image {
+    width: 72px;
+    height: 72px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #f0f0f0;
+  }
+  
+  .article-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .article-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #1a1a1a;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    letter-spacing: -0.1px;
+  }
+  
+  .article:hover .article-title {
+    color: #6ab04c;
+  }
+  
+  .article-date {
+    font-size: 10px;
+    color: #999;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 12px;
+    flex: 1;
+  }
+  
+  .loading-dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  
+  .loading-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6ab04c;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+  
+  /* FOOTER */
+  .widget-footer {
+    padding: 10px 16px;
+    background: #fafaf8;
+    border-top: 1px solid #e8e8e8;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  
+  .footer-link {
+    font-size: 10px;
+    color: #666;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  
+  .footer-link strong {
+    color: #6ab04c;
+    font-weight: 700;
+  }
+  
+  .footer-link:hover strong {
+    text-decoration: underline;
+  }
+  
+  /* FADE-IN */
+  .article {
+    animation: fadeIn 0.4s ease-out backwards;
+  }
+  
+  .article:nth-child(1) { animation-delay: 0.05s; }
+  .article:nth-child(2) { animation-delay: 0.1s; }
+  .article:nth-child(3) { animation-delay: 0.15s; }
+  .article:nth-child(4) { animation-delay: 0.2s; }
+  .article:nth-child(5) { animation-delay: 0.25s; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="widget">
+  
+  <div class="widget-header">
+    <div class="logo">
+      <img class="logo-img" src="Pari_Logo_01.png" alt="pari.com.mk">
+    </div>
+    <div class="header-label">Анализи</div>
+  </div>
+  
+  <div class="articles" id="articles">
+    <div class="loading">
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="widget-footer">
+    <a href="https://pari.com.mk?utm_source=timemk&utm_medium=widget&utm_campaign=pari_widget&utm_content=footer" target="_blank" rel="noopener" class="footer-link">
+      Повеќе на <strong>pari.com.mk</strong>
+    </a>
+  </div>
+  
+</div>
+
+<script>
+  // CONFIGURATION
+  const CONFIG = {
+    apiUrl: 'https://pari.com.mk/wp-json/wp/v2/posts',
+    tagSlug: 'analitika-medium',       // WordPress tag slug
+    postsCount: 5,
+    refreshInterval: 5 * 60 * 1000, // 5 minutes
+    utmParams: '?utm_source=timemk&utm_medium=widget&utm_campaign=pari_widget',
+    useMockData: false  // PRODUCTION MODE - fetches from pari.com.mk
+  };
+  
+  // MOCK DATA - fallback if API fails
+  const MOCK_ARTICLES = [
+    {
+      title: 'Што носат инстант плаќањата и поврзувањето со европскиот систем ТИПС?',
+      date: '2026-04-22',
+      link: 'https://pari.com.mk',
+      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&h=200&fit=crop'
+    },
+    {
+      title: 'ДИЈАГНОСТИКА ВО МИЛИОНИ: Авицена со бум на приходот, Биотек со најголем...',
+      date: '2026-04-22',
+      link: 'https://pari.com.mk',
+      image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=200&h=200&fit=crop'
+    },
+    {
+      title: 'СО ТРИ СЕНДВИЧАРИ И ЕДЕН РЕСТОРАН годишно „ВРТИ" НАД 5 МИЛИОНИ...',
+      date: '2026-04-21',
+      link: 'https://pari.com.mk',
+      image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=200&h=200&fit=crop'
+    },
+    {
+      title: 'ТОП 10 МАРКЕТИ: На Кам му се разделило, на Тинекс му...',
+      date: '2026-04-21',
+      link: 'https://pari.com.mk',
+      image: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=200&h=200&fit=crop'
+    },
+    {
+      title: 'КОЛУМНА | Може ли економската политика да ја држи инфлацијата под...',
+      date: '2026-04-20',
+      link: 'https://pari.com.mk',
+      image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=200&h=200&fit=crop'
+    }
+  ];
+  
+  // DATE FORMATTING
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+  }
+  
+  // HTML ENTITY DECODE (for WP titles)
+  function decodeHtml(html) {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    return txt.value;
+  }
+  
+  // RENDER ARTICLES
+  function renderArticles(articles) {
+    const container = document.getElementById('articles');
+    container.innerHTML = '';
+    
+    articles.forEach(article => {
+      const link = article.link + (article.link.includes('?') ? '&' : '?') + CONFIG.utmParams.substring(1);
+      
+      const el = document.createElement('a');
+      el.className = 'article';
+      el.href = link;
+      el.target = '_blank';
+      el.rel = 'noopener';
+      el.innerHTML = `
+        <img class="article-image" src="${article.image}" alt="" loading="lazy" onerror="this.style.background='#f0f0f0';this.src='';">
+        <div class="article-content">
+          <div class="article-title">${decodeHtml(article.title)}</div>
+          <div class="article-date">${formatDate(article.date)}</div>
+        </div>
+      `;
+      container.appendChild(el);
+    });
+  }
+  
+  // Transform WP post to article object
+  function transformPost(post) {
+    return {
+      title: post.title.rendered,
+      date: post.date,
+      link: post.link,
+      image: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 
+             post._embedded?.['wp:featuredmedia']?.[0]?.media_details?.sizes?.medium?.source_url ||
+             'https://pari.com.mk/wp-content/uploads/default.jpg'
+    };
+  }
+  
+  // FETCH FROM WORDPRESS - sticky first, then latest by date
+  async function fetchArticles() {
+    if (CONFIG.useMockData) {
+      setTimeout(() => renderArticles(MOCK_ARTICLES), 600);
+      return;
+    }
+    
+    try {
+      // Step 1: Get tag ID by slug
+      const tagRes = await fetch(`https://pari.com.mk/wp-json/wp/v2/tags?slug=${CONFIG.tagSlug}`);
+      const tags = await tagRes.json();
+      if (!tags.length) throw new Error('Tag not found');
+      const tagId = tags[0].id;
+      
+      // Step 2: Fetch STICKY posts with this tag (ordered by date desc)
+      const stickyUrl = `${CONFIG.apiUrl}?tags=${tagId}&sticky=true&per_page=${CONFIG.postsCount}&orderby=date&order=desc&_embed`;
+      const stickyRes = await fetch(stickyUrl);
+      const stickyPosts = await stickyRes.json();
+      
+      let articles = stickyPosts.map(transformPost);
+      
+      // Step 3: If we have fewer than postsCount sticky, fill with regular tagged posts
+      if (articles.length < CONFIG.postsCount) {
+        const needed = CONFIG.postsCount - articles.length;
+        const excludeIds = stickyPosts.map(p => p.id).join(',');
+        const regularUrl = `${CONFIG.apiUrl}?tags=${tagId}&per_page=${needed}&orderby=date&order=desc&_embed${excludeIds ? '&exclude=' + excludeIds : ''}`;
+        const regularRes = await fetch(regularUrl);
+        const regularPosts = await regularRes.json();
+        articles = articles.concat(regularPosts.map(transformPost));
+      }
+      
+      if (!articles.length) throw new Error('No posts found');
+      
+      renderArticles(articles);
+    } catch (err) {
+      console.error('Widget fetch error:', err);
+      renderArticles(MOCK_ARTICLES);
+    }
+  }
+  
+  // INIT
+  fetchArticles();
+  
+  // AUTO-REFRESH every 5 minutes
+  setInterval(fetchArticles, CONFIG.refreshInterval);
+</script>
+</body>
+</html>
