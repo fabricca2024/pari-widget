@@ -52,7 +52,7 @@
   }
   
   .logo-img {
-    height: 28px;
+    height: 32px;
     width: auto;
     display: block;
   }
@@ -333,13 +333,14 @@
       title: post.title.rendered,
       date: post.date,
       link: post.link,
+      sticky: post.sticky || false,
       image: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 
              post._embedded?.['wp:featuredmedia']?.[0]?.media_details?.sizes?.medium?.source_url ||
              'https://pari.com.mk/wp-content/uploads/default.jpg'
     };
   }
   
-  // FETCH FROM WORDPRESS - sticky first, then latest by date
+  // FETCH FROM WORDPRESS - all tagged posts, sort sticky first in JS
   async function fetchArticles() {
     if (CONFIG.useMockData) {
       setTimeout(() => renderArticles(MOCK_ARTICLES), 600);
@@ -353,24 +354,22 @@
       if (!tags.length) throw new Error('Tag not found');
       const tagId = tags[0].id;
       
-      // Step 2: Fetch STICKY posts with this tag (ordered by date desc)
-      const stickyUrl = `${CONFIG.apiUrl}?tags=${tagId}&sticky=true&per_page=${CONFIG.postsCount}&orderby=date&order=desc&_embed`;
-      const stickyRes = await fetch(stickyUrl);
-      const stickyPosts = await stickyRes.json();
+      // Step 2: Fetch all tagged posts (up to 20 for safety), by date desc
+      // Note: use per_page larger than postsCount so we can sort by sticky first
+      const postsUrl = `${CONFIG.apiUrl}?tags=${tagId}&per_page=20&orderby=date&order=desc&_embed`;
+      const postsRes = await fetch(postsUrl);
+      const posts = await postsRes.json();
       
-      let articles = stickyPosts.map(transformPost);
+      if (!posts.length) throw new Error('No posts found');
       
-      // Step 3: If we have fewer than postsCount sticky, fill with regular tagged posts
-      if (articles.length < CONFIG.postsCount) {
-        const needed = CONFIG.postsCount - articles.length;
-        const excludeIds = stickyPosts.map(p => p.id).join(',');
-        const regularUrl = `${CONFIG.apiUrl}?tags=${tagId}&per_page=${needed}&orderby=date&order=desc&_embed${excludeIds ? '&exclude=' + excludeIds : ''}`;
-        const regularRes = await fetch(regularUrl);
-        const regularPosts = await regularRes.json();
-        articles = articles.concat(regularPosts.map(transformPost));
-      }
+      // Step 3: Transform and sort — sticky posts first (by date desc), then non-sticky (by date desc)
+      const allArticles = posts.map(transformPost);
+      const stickyArticles = allArticles.filter(a => a.sticky);
+      const regularArticles = allArticles.filter(a => !a.sticky);
+      const sortedArticles = [...stickyArticles, ...regularArticles];
       
-      if (!articles.length) throw new Error('No posts found');
+      // Step 4: Take only the first N
+      const articles = sortedArticles.slice(0, CONFIG.postsCount);
       
       renderArticles(articles);
     } catch (err) {
